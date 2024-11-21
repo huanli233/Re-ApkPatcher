@@ -5,6 +5,12 @@
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleHome" value="$PROJECT_DIR$/../../../Applications/Coding_Env_Real/gradle-8.5" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/dex-mixin-api" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
   </component>
