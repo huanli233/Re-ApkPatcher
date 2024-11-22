@@ -20,4 +20,9 @@ public @interface Mixin {
      * @return target class name(s)
      */
     String[] targets() default { };
+
+    SourceFile[] sourceFiles() default { };
+
+    boolean targetRegex() default false;
+
 }
