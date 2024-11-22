@@ -9,16 +9,16 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 public @interface Desc {
 
-    public String[] value();
+    String[] value();
 
-    public boolean regex() default false;
+    boolean regex() default false;
 
-    public Class<?> ret() default void.class;
+    Class<?> ret() default void.class;
 
-    public Class<?>[] args() default { };
+    Class<?>[] args() default { };
 
-    public int min() default 0;
+    int min() default 0;
 
-    public int max() default Integer.MAX_VALUE;
+    int max() default Integer.MAX_VALUE;
 
 }

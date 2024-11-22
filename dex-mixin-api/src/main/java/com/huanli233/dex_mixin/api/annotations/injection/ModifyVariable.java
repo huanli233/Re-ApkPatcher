@@ -9,12 +9,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 public @interface ModifyVariable {
 
-    public String[] method() default {};
+    String[] method() default {};
 
-    public Desc[] target() default {};
+    Desc[] target() default {};
 
-    public boolean store() default false;
+    boolean store() default false;
 
-    public int ordinal() default -1;
+    int ordinal() default -1;
 
 }

@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 public @interface ModifyConstant {
 
-    public String[] method() default {};
+    String[] method() default {};
 
-    public Desc[] target() default {};
+    Desc[] target() default {};
 
-    public Constant[] constant() default {};
+    Constant[] constant() default {};
 
 }

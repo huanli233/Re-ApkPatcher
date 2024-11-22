@@ -12,10 +12,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 public @interface ModifyArg {
 
-    public String[] method() default {};
+    String[] method() default {};
 
-    public Desc[] target() default {};
+    Desc[] target() default {};
 
-    public At at();
+    At at();
 
 }

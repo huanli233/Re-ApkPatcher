@@ -8,11 +8,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 public @interface At {
 
-    public enum Pos {
+    enum Pos {
         HEAD, RETURN, TAIL, INVOKE, INVOKE_ASSIGN, FIELD
     }
 
-    public enum Shift {
+    enum Shift {
 
         /**
          * Do not shift the returned opcodes
@@ -31,16 +31,16 @@ public @interface At {
 
     }
 
-    public enum Opcode {
+    enum Opcode {
         ANY, GET_VALUE, PUT_VALUE
     }
 
-    public Pos value();
+    Pos value();
 
-    public String target() default "";
+    String target() default "";
 
-    public Shift shift() default Shift.NONE;
+    Shift shift() default Shift.NONE;
 
-    public Opcode opcode() default Opcode.ANY;
+    Opcode opcode() default Opcode.ANY;
 
 }

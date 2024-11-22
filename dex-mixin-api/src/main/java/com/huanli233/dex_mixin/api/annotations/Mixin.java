@@ -12,12 +12,12 @@ public @interface Mixin {
      *
      * @return classes this mixin targets
      */
-    public Class<?>[] value() default { };
+    Class<?>[] value() default { };
 
     /**
      * String type target class name(s) for this mixin
      *
      * @return target class name(s)
      */
-    public String[] targets() default { };
+    String[] targets() default { };
 }
