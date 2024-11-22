@@ -31,10 +31,16 @@ public @interface At {
 
     }
 
+    public enum Opcode {
+        ANY, GET_VALUE, PUT_VALUE
+    }
+
     public Pos value();
 
     public String target() default "";
 
     public Shift shift() default Shift.NONE;
+
+    public Opcode opcode() default Opcode.ANY;
 
 }

@@ -9,6 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/dex-mixin-api" />
+            <option value="$PROJECT_DIR$/dex-mixin-core" />
           </set>
         </option>
       </GradleProjectSettings>

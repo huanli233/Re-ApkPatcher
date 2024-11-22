@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm")
+    java
 }
 
 group = "com.huanli233"
@@ -10,12 +10,9 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    compileOnly("org.jetbrains:annotations:26.0.1")
 }
 
 tasks.test {
     useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(21)
 }

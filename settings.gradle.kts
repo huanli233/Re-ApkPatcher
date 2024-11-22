@@ -8,3 +8,4 @@ plugins {
 }
 rootProject.name = "re-apkpatcher"
 include("dex-mixin-api")
+include("dex-mixin-core")
