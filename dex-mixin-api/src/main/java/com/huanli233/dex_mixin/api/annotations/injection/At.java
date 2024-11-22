@@ -1,5 +1,7 @@
 package com.huanli233.dex_mixin.api.annotations.injection;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -35,12 +37,16 @@ public @interface At {
         ANY, GET_VALUE, PUT_VALUE
     }
 
+    @NotNull
     Pos value();
 
+    @NotNull
     String target() default "";
 
+    @NotNull
     Shift shift() default Shift.NONE;
 
+    @NotNull
     Opcode opcode() default Opcode.ANY;
 
 }

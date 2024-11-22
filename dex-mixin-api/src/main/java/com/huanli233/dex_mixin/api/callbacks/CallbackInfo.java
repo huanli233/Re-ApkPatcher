@@ -1,5 +1,7 @@
 package com.huanli233.dex_mixin.api.callbacks;
 
+import org.jetbrains.annotations.NotNull;
+
 public class CallbackInfo implements Cancellable {
 
     private final String name;
@@ -8,11 +10,12 @@ public class CallbackInfo implements Cancellable {
 
     private boolean cancelled;
 
-    public CallbackInfo(String name, boolean cancellable) {
+    public CallbackInfo(@NotNull String name, boolean cancellable) {
         this.name = name;
         this.cancellable = cancellable;
     }
 
+    @NotNull
     public String getMethodName() {
         return this.name;
     }

@@ -1,5 +1,7 @@
 package com.huanli233.dex_mixin.api.callbacks;
 
+import org.jetbrains.annotations.NotNull;
+
 public class ArgsModifier {
 
     protected final Object[] values;
@@ -16,10 +18,8 @@ public class ArgsModifier {
         values[index] = value;
     }
 
-    public void setAll(Object... values) {
-        for (int i = 0; i < values.length; i++) {
-            this.values[i] = values[i];
-        }
+    public void setAll(@NotNull Object... values) {
+        System.arraycopy(values, 0, this.values, 0, values.length);
     }
 
 }
