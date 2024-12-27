@@ -1,33 +1,19 @@
 package com.huanli233.dex_mixin.core.dex
 
-import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.DexFile
-import com.android.tools.smali.dexlib2.iface.instruction.Instruction
-import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction21c
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
-import com.android.tools.smali.dexlib2.iface.reference.TypeReference
-import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
-import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21c
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableFieldReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
-import com.android.tools.smali.dexlib2.immutable.reference.ImmutableTypeReference
 import com.android.tools.smali.dexlib2.rewriter.*
 import com.huanli233.dex_mixin.api.annotations.Mixin
 import com.huanli233.dex_mixin.api.annotations.Shadow
 import com.huanli233.dex_mixin.api.utils.smaliType
 import com.huanli233.dex_mixin.api.utils.smaliTypeToJava
 import com.huanli233.dex_mixin.core.exceptions.DexMixinException
-import com.huanli233.dex_mixin.core.utils.dexlib2.AnnotationValueParser
-import com.huanli233.dex_mixin.core.utils.dexlib2.Converters.referenceType
-import com.huanli233.dex_mixin.core.utils.dexlib2.ReferenceType
-import com.huanli233.dex_mixin.core.utils.dexlib2.RewriterManager
-import com.huanli233.dex_mixin.core.utils.dexlib2.copy
-import com.huanli233.dex_mixin.core.utils.dexlib2.rewrite
-import com.huanli233.dex_mixin.core.utils.dexlib2.signature
+import com.huanli233.dex_mixin.core.utils.dexlib2.*
 import com.huanli233.dex_mixin.core.utils.getEntryInputStream
-import com.huanli233.dex_mixin.core.utils.kotlin.cast
 import com.huanli233.dex_mixin.core.utils.withReader
 import java.util.zip.ZipFile
 
@@ -51,8 +37,7 @@ class DexProcessor(
         }
 
         private fun matchWithWildcard(patternParts: List<String>, inputParts: List<String>): Boolean {
-            var i = 0
-            var j = 0
+            var i = 0; var j = 0
             while (i < patternParts.size && j < inputParts.size) {
                 val patternPart = patternParts[i]
                 val inputPart = inputParts[j]
@@ -70,12 +55,10 @@ class DexProcessor(
                         return false
                     }
                     "*" -> {
-                        i++
-                        j++
+                        i++; j++
                     }
                     inputPart -> {
-                        i++
-                        j++
+                        i++; j++
                     }
                     else -> {
                         return false
@@ -193,13 +176,11 @@ class DexProcessor(
     }
 
     private fun addOrReplaceNormalClassesToTarget() {
-        val targetClassTypes = targetAppDex.classes.map {
-            it.type
-        }
+        val targetClassTypes = targetAppDex.classes.map { it.type }
         val (ignoreClassesSet, replaceClassesSet) = readClassesConf()
         normalClasses.forEach { classDef ->
             if (targetClassTypes.contains(classDef.type)) {
-                if (matches(ignoreClassesSet, classDef.type)) {
+                if (matches(ignoreClassesSet, classDef.type) || classDef.annotations.any { it.type == Shadow::class.smaliType }) {
                     return@forEach
                 } else if (!matches(replaceClassesSet, classDef.type)) {
                     throw DexMixinException("The class definition ${classDef.type} already exists in the target application class, but it is not configured to be ignored or replaced")
