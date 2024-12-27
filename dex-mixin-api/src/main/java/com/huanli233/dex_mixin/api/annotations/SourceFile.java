@@ -5,12 +5,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Target({})
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface SourceFile {
 
-    String value();
+    String value() default "";
 
-    String extraRegex() default "";
+    String typeRegex() default "";
 
     boolean regex() default false;
 

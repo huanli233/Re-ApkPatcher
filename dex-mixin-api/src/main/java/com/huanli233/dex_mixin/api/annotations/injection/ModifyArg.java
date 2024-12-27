@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * Modify method call parameters
  */
 @Target({ ElementType.METHOD })
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface ModifyArg {
 
     String[] method() default {};

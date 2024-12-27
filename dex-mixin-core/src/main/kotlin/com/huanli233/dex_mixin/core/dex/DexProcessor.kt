@@ -1,13 +1,33 @@
 package com.huanli233.dex_mixin.core.dex
 
+import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.DexFile
+import com.android.tools.smali.dexlib2.iface.instruction.Instruction
+import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction21c
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.iface.reference.TypeReference
+import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21c
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableFieldReference
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableTypeReference
 import com.android.tools.smali.dexlib2.rewriter.*
 import com.huanli233.dex_mixin.api.annotations.Mixin
+import com.huanli233.dex_mixin.api.annotations.Shadow
 import com.huanli233.dex_mixin.api.utils.smaliType
+import com.huanli233.dex_mixin.api.utils.smaliTypeToJava
 import com.huanli233.dex_mixin.core.exceptions.DexMixinException
+import com.huanli233.dex_mixin.core.utils.dexlib2.AnnotationValueParser
+import com.huanli233.dex_mixin.core.utils.dexlib2.Converters.referenceType
+import com.huanli233.dex_mixin.core.utils.dexlib2.ReferenceType
 import com.huanli233.dex_mixin.core.utils.dexlib2.RewriterManager
+import com.huanli233.dex_mixin.core.utils.dexlib2.copy
+import com.huanli233.dex_mixin.core.utils.dexlib2.rewrite
+import com.huanli233.dex_mixin.core.utils.dexlib2.signature
 import com.huanli233.dex_mixin.core.utils.getEntryInputStream
+import com.huanli233.dex_mixin.core.utils.kotlin.cast
 import com.huanli233.dex_mixin.core.utils.withReader
 import java.util.zip.ZipFile
 
@@ -71,6 +91,8 @@ class DexProcessor(
     val normalClasses = mutableSetOf<ClassDef>()
     val mixinClasses = mutableSetOf<ClassDef>()
 
+    val mixinTargetsMap = mutableMapOf<String, String>()
+
     init {
         mixinDex.classes.forEach { clazz ->
             if (clazz.annotations.find {
@@ -98,17 +120,74 @@ class DexProcessor(
                     }
                 }
             }
+
+            override fun getTypeRewriter(rewriters: Rewriters): Rewriter<String?> {
+                return object : TypeRewriter() {
+                    override fun rewrite(value: String): String {
+                        return super.rewrite(mixinTargetsMap[value] ?: value)
+                    }
+                }
+            }
+
+            override fun getFieldReferenceRewriter(rewriters: Rewriters): Rewriter<FieldReference?> {
+                return object : FieldReferenceRewriter(rewriters) {
+                    override fun rewrite(fieldReference: FieldReference): FieldReference {
+                        return super.rewrite(fieldReference.run {
+                            mixinTargetsMap[definingClass]?.let { targetType ->
+                                ImmutableFieldReference(
+                                    /* definingClass = */ targetType,
+                                    /* name = */ name,
+                                    /* type = */ type
+                                )
+                            } ?: fieldReference
+                        })
+                    }
+                }
+            }
+
+            override fun getMethodReferenceRewriter(rewriters: Rewriters): Rewriter<MethodReference?> {
+                return object : MethodReferenceRewriter(rewriters) {
+                    override fun rewrite(methodReference: MethodReference): MethodReference {
+                        return super.rewrite(methodReference.run {
+                            mixinTargetsMap[definingClass]?.let { targetType ->
+                                ImmutableMethodReference(
+                                    /* definingClass = */ targetType,
+                                    /* name = */ name,
+                                    /* parameters = */ parameterTypes,
+                                    /* returnType = */ returnType
+                                )
+                            } ?: methodReference
+                        })
+                    }
+                }
+            }
         }).dexFileRewriter.rewrite(targetAppDex)
     }
 
     private fun applyMixin() {
         mixinClasses.forEach { mixinClass ->
             mixinClass.annotations.find { it.type == Mixin::class.smaliType }?.elements?.let { elements ->
-                val targets = TargetFinder.findTargetByMixinAnnotation(
-                    elements,
+                val target = TargetFinder.findTargetByMixinAnnotation(
+                    mixinClass.type,
+                    AnnotationValueParser.parseMixin(elements),
                     targetAppDex.classes
-                )
-                TODO("not implemented")
+                ) ?: throw DexMixinException("Can't find target class for mixin class ${mixinClass.type.smaliTypeToJava()}")
+                mixinTargetsMap[mixinClass.type] = target.type
+                target.rewrite {
+                    mixinClass.fields.filter {
+                        it.annotations.any { annotation -> annotation.type == Shadow::class.smaliType }.not()
+                    }.forEach { field ->
+                        if (fields.any { it.signature == field.signature }) {
+                            throw DexMixinException("Field ${field.signature} already exists in target class ${target.type.smaliTypeToJava()}")
+                        }
+                        fields.add(field.copy(
+                            definingClass = target.type
+                        ))
+                    }
+                    mixinClass.methods.forEach { method ->
+                        TODO("Not implemented")
+                    }
+                }
             }
         }
     }

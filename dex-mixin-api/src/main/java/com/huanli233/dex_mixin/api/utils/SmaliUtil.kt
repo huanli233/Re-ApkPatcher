@@ -10,3 +10,6 @@ val Class<*>.smaliType: String
 
 val KClass<*>.smaliType: String
     get() = java.smaliType
+
+fun String.smaliTypeToJava(): String =
+    SmaliUtil.smaliTypeToJava(this)
