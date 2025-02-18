@@ -18,6 +18,7 @@ import com.huanli233.dex_mixin.core.dex.Injector
 import com.huanli233.dex_mixin.core.utils.dexlib2.*
 import com.huanli233.dex_mixin.core.utils.dexlib2.mutable_impl.modifyImplementation
 import com.huanli233.dex_mixin.core.utils.exception
+import com.huanli233.dex_mixin.core.utils.require
 
 object RedirectInjector : Injector() {
 
@@ -36,7 +37,7 @@ object RedirectInjector : Injector() {
                             (instruction.reference as? MethodReference)?.let { reference ->
 
                                 if (reference.description == redirect.at.target) {
-                                    require(method.parameterTypes != reference.parameterTypes) { exception("Method parameter types not match") }
+                                    require(method.parameterTypes == reference.parameterTypes) { "Method parameter types not match" }
                                     return@body target.copy(
                                         implementation = target.modifyImplementation {
                                             replaceInstruction(
@@ -99,13 +100,11 @@ object RedirectInjector : Injector() {
                                                                 reference.type
                                                             )
                                                         require(method.parameterTypes == expectedParameterTypes) {
-                                                            exception(
-                                                                "Parameter type is illegal. Expected: [${expectedParameterTypes.joinToString()}]"
-                                                            )
+                                                            "Parameter type is illegal. Expected: [${expectedParameterTypes.joinToString()}]"
                                                         }
                                                         val expectedReturnType =
                                                             if (isGetFieldOpcode) reference.type else SmaliType.VOID.type
-                                                        require(method.returnType == expectedReturnType) { exception("Return type is illegal. Expected: [$expectedReturnType]") }
+                                                        require(method.returnType == expectedReturnType) { "Return type is illegal. Expected: [$expectedReturnType]" }
                                                         if (isGetFieldOpcode) {
                                                             replaceInstruction(
                                                                 index,
@@ -153,13 +152,11 @@ object RedirectInjector : Injector() {
                                                                 reference.type
                                                             )
                                                         require(method.parameterTypes == expectedParameterTypes) {
-                                                            exception(
-                                                                "Parameter type is illegal. Expected: [${expectedParameterTypes.joinToString()}]"
-                                                            )
+                                                            "Parameter type is illegal. Expected: [${expectedParameterTypes.joinToString()}]"
                                                         }
                                                         val expectedReturnType =
                                                             if (isGetFieldOpcode) reference.type else SmaliType.VOID.type
-                                                        require(method.returnType == expectedReturnType) { exception("Return type is illegal. Expected: [$expectedReturnType]") }
+                                                        require(method.returnType == expectedReturnType) { "Return type is illegal. Expected: [$expectedReturnType]"}
                                                         if (isGetFieldOpcode) {
                                                             replaceInstruction(
                                                                 index,
