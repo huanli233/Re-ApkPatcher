@@ -42,3 +42,18 @@ fun Field.copy(
     annotations: Set<Annotation> = this.annotations,
     hiddenApiRestrictions: Set<HiddenApiRestriction> = this.hiddenApiRestrictions
 ) = ImmutableField(definingClass, name, type, accessFlags, initialValue, annotations, hiddenApiRestrictions)
+
+fun <T> T.settable(
+    setter: (T) -> Unit
+) = Settable(this, setter)
+
+class Settable<T>(
+    initialValue: T,
+    private val setter: (T) -> Unit
+) {
+    var value = initialValue
+        set(value) {
+            field = value
+            setter(value)
+        }
+}

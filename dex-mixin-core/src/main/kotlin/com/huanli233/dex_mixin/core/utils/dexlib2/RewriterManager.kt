@@ -1,13 +1,9 @@
 package com.huanli233.dex_mixin.core.utils.dexlib2
 
-import com.android.tools.smali.dexlib2.HiddenApiRestriction
 import com.android.tools.smali.dexlib2.iface.Annotation
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Field
 import com.android.tools.smali.dexlib2.iface.Method
-import com.android.tools.smali.dexlib2.iface.MethodImplementation
-import com.android.tools.smali.dexlib2.iface.MethodParameter
-import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 import com.android.tools.smali.dexlib2.rewriter.ClassDefRewriter
 import com.android.tools.smali.dexlib2.rewriter.Rewriters
 import com.huanli233.dex_mixin.core.utils.dexlib2.RewriterManager.ClassRewriterModule
@@ -16,6 +12,7 @@ import com.huanli233.dex_mixin.core.utils.dexlib2.RewriterManager.classesRewrite
 object RewriterManager {
 
     val classesRewriters = mutableMapOf<ClassDef, MutableList<(Rewriters, ClassDef) -> ClassDef>>()
+    val addedClasses = mutableSetOf<ClassDef>()
 
     class ClassRewriterModule(
         rewriters: Rewriters,

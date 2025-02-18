@@ -4,6 +4,8 @@ import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.DexFile
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.immutable.ImmutableClassDef
+import com.android.tools.smali.dexlib2.immutable.ImmutableDexFile
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableFieldReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
 import com.android.tools.smali.dexlib2.rewriter.*
@@ -11,8 +13,12 @@ import com.huanli233.dex_mixin.api.annotations.Mixin
 import com.huanli233.dex_mixin.api.annotations.Shadow
 import com.huanli233.dex_mixin.api.utils.smaliType
 import com.huanli233.dex_mixin.api.utils.smaliTypeToJava
+import com.huanli233.dex_mixin.core.dex.MethodInjection.injectTo
+import com.huanli233.dex_mixin.core.dex.MethodInjection.isInjectMethod
 import com.huanli233.dex_mixin.core.exceptions.DexMixinException
 import com.huanli233.dex_mixin.core.utils.dexlib2.*
+import com.huanli233.dex_mixin.core.utils.dexlib2.RewriterManager.addedClasses
+import com.huanli233.dex_mixin.core.utils.exception
 import com.huanli233.dex_mixin.core.utils.getEntryInputStream
 import com.huanli233.dex_mixin.core.utils.withReader
 import java.util.zip.ZipFile
@@ -92,6 +98,17 @@ class DexProcessor(
         addOrReplaceNormalClassesToTarget()
         applyMixin()
         return DexRewriter(object : RewriterModule() {
+            override fun getDexFileRewriter(rewriters: Rewriters): Rewriter<DexFile?> {
+                return object : DexFileRewriter(rewriters) {
+                    override fun rewrite(value: DexFile): DexFile {
+                        return super.rewrite(ImmutableDexFile(
+                            /* opcodes = */ value.opcodes,
+                            /* classes = */ addedClasses + value.classes
+                        ))
+                    }
+                }
+            }
+
             override fun getClassDefRewriter(rewriters: Rewriters): Rewriter<ClassDef?> {
                 return object : ClassDefRewriter(rewriters) {
                     override fun rewrite(classDef: ClassDef): ClassDef {
@@ -154,21 +171,29 @@ class DexProcessor(
                     mixinClass.type,
                     AnnotationValueParser.parseMixin(elements),
                     targetAppDex.classes
-                ) ?: throw DexMixinException("Can't find target class for mixin class ${mixinClass.type.smaliTypeToJava()}")
+                ) ?: exception("Can't find target class for mixin class ${mixinClass.type.smaliTypeToJava()}")
                 mixinTargetsMap[mixinClass.type] = target.type
                 target.rewrite {
                     mixinClass.fields.filter {
                         it.annotations.any { annotation -> annotation.type == Shadow::class.smaliType }.not()
                     }.forEach { field ->
                         if (fields.any { it.signature == field.signature }) {
-                            throw DexMixinException("Field ${field.signature} already exists in target class ${target.type.smaliTypeToJava()}")
+                            exception("Field ${field.signature} already exists in target class ${target.type.smaliTypeToJava()}")
                         }
                         fields.add(field.copy(
                             definingClass = target.type
                         ))
                     }
                     mixinClass.methods.forEach { method ->
-                        TODO("Not implemented")
+                        if (methods.any { it.signature == method.signature }) {
+                            exception("Method ${method.signature} already exists in target class ${target.type.smaliTypeToJava()}")
+                        }
+                        methods.add(method.copy(
+                            definingClass = target.type
+                        ).run {
+                            if (isInjectMethod()) TargetFinder.findTargetMethodByAnnotations(annotations, methods)?.let { injectTo(it) } ?: this
+                            else this
+                        })
                     }
                 }
             }
@@ -179,14 +204,15 @@ class DexProcessor(
         val targetClassTypes = targetAppDex.classes.map { it.type }
         val (ignoreClassesSet, replaceClassesSet) = readClassesConf()
         normalClasses.forEach { classDef ->
-            if (targetClassTypes.contains(classDef.type)) {
+            val isShadow = classDef.annotations.any { it.type == Shadow::class.smaliType }
+            if (targetClassTypes.contains(classDef.type) || isShadow) {
                 if (matches(ignoreClassesSet, classDef.type) || classDef.annotations.any { it.type == Shadow::class.smaliType }) {
                     return@forEach
                 } else if (!matches(replaceClassesSet, classDef.type)) {
-                    throw DexMixinException("The class definition ${classDef.type} already exists in the target application class, but it is not configured to be ignored or replaced")
+                    exception("The class definition ${classDef.type} already exists in the target application class, but it is not configured to be ignored or replaced")
                 }
             }
-            (targetAppDex.classes as MutableSet<ClassDef>).add(classDef)
+            addedClasses.add(classDef)
         }
     }
 
@@ -199,7 +225,7 @@ class DexProcessor(
             reader.forEachLine { line ->
                 val split = line.trim().split(" ")
                 if (split.size < 2) {
-                    throw DexMixinException("Content of $CLASSES_CONF_FILEPATH is illegal, at line #$count")
+                    exception("Content of $CLASSES_CONF_FILEPATH is illegal, at line #$count")
                 } else {
                     val command = split[0]
                     val content = line.trim().substring(command.length)

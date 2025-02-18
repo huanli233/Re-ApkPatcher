@@ -13,7 +13,7 @@ public @interface Inject {
 
     Desc[] target() default {};
 
-    At[] at();
+    At at();
 
     boolean cancellable() default false;
 

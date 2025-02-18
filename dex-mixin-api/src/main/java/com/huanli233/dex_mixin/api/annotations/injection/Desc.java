@@ -13,12 +13,8 @@ public @interface Desc {
 
     boolean regex() default false;
 
-    Class<?> ret() default void.class;
+    String ret() default "V";
 
-    Class<?>[] args() default { };
-
-    int min() default 0;
-
-    int max() default Integer.MAX_VALUE;
+    String[] args() default { };
 
 }

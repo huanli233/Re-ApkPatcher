@@ -37,16 +37,12 @@ public @interface At {
         ANY, GET_VALUE, PUT_VALUE
     }
 
-    @NotNull
     Pos value();
 
-    @NotNull
     String target() default "";
 
-    @NotNull
     Shift shift() default Shift.NONE;
 
-    @NotNull
     Opcode opcode() default Opcode.ANY;
 
 }

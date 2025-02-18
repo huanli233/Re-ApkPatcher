@@ -50,6 +50,13 @@ fun EncodedValue.getEnumValue() =
 fun EncodedValue.getArrayValue() =
     (this as ArrayEncodedValue).value
 
+inline fun <reified T> EncodedValue.getArrayValue(
+    converter: EncodedValue.() -> T
+) = getArrayValue().map { it.converter() }.toTypedArray()
+
+fun EncodedValue.getStringArrayValue() =
+    getArrayValue().map { value -> value.getStringValue() }.toTypedArray()
+
 fun EncodedValue.getAnnotationValue() =
     (this as AnnotationEncodedValue).run {
         AnnotationValue(type, elements)
