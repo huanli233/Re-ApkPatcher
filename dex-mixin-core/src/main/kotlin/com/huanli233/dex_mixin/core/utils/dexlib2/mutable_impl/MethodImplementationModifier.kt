@@ -13,10 +13,10 @@ import com.huanli233.dex_mixin.core.utils.dexlib2.settable
 
 class MethodImplementationModifier(
     private val srcMethod: Method,
-    private val originalImplementation: MethodImplementation
+    val originalImplementation: MethodImplementation = srcMethod.implementation ?: throw IllegalArgumentException("Method $srcMethod has no implementation")
 ): MutableMethodImplementation(originalImplementation) {
 
-    var mutableRegisterCount = originalImplementation.registerCount
+    private var mutableRegisterCount = originalImplementation.registerCount
 
     private var fixParamRegisters = false
     private val originalRegisterCount = mutableRegisterCount
@@ -350,7 +350,8 @@ class MethodImplementationModifier(
 
     private fun fixInstructionParamRegisters(vararg registers: Int): Pair<List<Int>, Boolean> {
         val paramCount = srcMethod.parameters.size
-        val originalParamRegisters = (originalRegisterCount - paramCount + 1..originalRegisterCount).toList()
+        val paramStart = originalRegisterCount - paramCount
+        val originalParamRegisters = (paramStart until originalRegisterCount).toList()
         var containsParamRegister = false
         return registers.map { i ->
             val paramRegister = originalParamRegisters.indexOf(i)
@@ -390,7 +391,6 @@ class MethodImplementationModifier(
             }
         }
 
-        // 生成移动大寄存器到小寄存器的指令
         for (i in registers.indices) {
             val sourceReg = registers[i]
             val smallStart = smallRegArray[i]
@@ -401,10 +401,8 @@ class MethodImplementationModifier(
             }
         }
 
-        // 用户提供的指令
         val blockInstructions = block(smallRegArray)
 
-        // 生成恢复原小寄存器的指令
         for (i in registers.indices) {
             val smallStart = smallRegArray[i]
             val tempStart = tempRegs[i * k]
@@ -415,7 +413,6 @@ class MethodImplementationModifier(
             }
         }
 
-        // 合并所有指令并插入到指定位置
         val allInstructions = saveInstructions + moveToSmallInstructions + blockInstructions + restoreInstructions
         methodImpl.insertAllInstructions(index, allInstructions)
     }
@@ -456,7 +453,6 @@ class MethodImplementationModifier(
         }
     }
 
-    // DataType扩展属性，获取寄存器数目
     val SmaliType.registerCount: Int
         get() = when (this) {
             SmaliType.LONG, SmaliType.DOUBLE -> 2

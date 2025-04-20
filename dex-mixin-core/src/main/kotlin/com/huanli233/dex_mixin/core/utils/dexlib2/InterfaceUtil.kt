@@ -56,7 +56,7 @@ fun Collection<Annotation>.getAnnotationOrNull(clazz: KClass<*>) = getAnnotation
 
 val Method.registerCountWithoutLocals
     get() =
-        parameters.size + (if (accessFlags.toAccessFlagsForMethod().contains(AccessFlags.STATIC)) 0 else 1)
+        parameters.size + (if (hasAccessFlags(AccessFlags.STATIC)) 0 else 1)
 
 fun Method.parseAccessFlags() = accessFlags.toAccessFlagsForMethod()
 fun Method.hasAccessFlags(vararg flags: AccessFlags) = flags.all { it in parseAccessFlags() }
